@@ -54,7 +54,7 @@ ostream& operator << (ostream& os, const map<K, V>& m) {
 
 template<class T, class U>
 void AssertEqual(const T& t, const U& u, const string& hint = {}) {
-  if (!(t == u)) {
+    if (!(t == u)) {
     ostringstream os;
     os << "Assertion failed: " << t << " != " << u;
     if (!hint.empty()) {
@@ -96,17 +96,17 @@ private:
 };
 
 #define ASSERT_EQUAL(x, y) {            \
-  ostringstream os;                     \
-  os << #x << " != " << #y << ", "      \
+  ostringstream ossss;                     \
+  ossss << #x << " != " << #y << ", "      \
     << __FILE__ << ":" << __LINE__;     \
-  AssertEqual(x, y, os.str());          \
+  AssertEqual(x, y, ossss.str());          \
 }
 
 #define ASSERT(x) {                     \
-  ostringstream os;                     \
-  os << #x << " is false, "             \
+  ostringstream ossss;                     \
+  ossss << #x << " is false, "             \
     << __FILE__ << ":" << __LINE__;     \
-  Assert(x, os.str());                  \
+  Assert(x, ossss.str());                  \
 }
 
 #define RUN_TEST(tr, func) \

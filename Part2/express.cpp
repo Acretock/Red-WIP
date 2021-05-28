@@ -25,22 +25,22 @@ public:
             if (!reachable_lists_.at(start).empty()) {
                 result = min(
                     result,
-                    abs(finish - *prev(reachable_stations.end())));
+                    abs(*prev(reachable_stations.end()) - finish));
             }}
         return result;
     }
 
+    /*result = min(
+          result,
+          abs(finish - *min_element(
+              begin(reachable_stations), end(reachable_stations),
+              [finish](int lhs, int rhs) { return abs(lhs - finish) < abs(rhs - finish); }
+          ))
+      );*/
 private:
     map<int, set<int>> reachable_lists_;
 };
 
-/*result = min(
-      result,
-      abs(finish - *min_element(
-          begin(reachable_stations), end(reachable_stations),
-          [finish](int lhs, int rhs) { return abs(lhs - finish) < abs(rhs - finish); }
-      ))
-  );*/
 int main() {
     RouteManager routes;
 
