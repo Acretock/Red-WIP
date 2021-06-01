@@ -55,6 +55,7 @@ public:
         if (position == user_count) {
             return 0;
         }
+        
         auto it = data.upper_bound(person.at(user_id));
         if (it == data.end() && prev(it)->second.size() == 1) {
             return 1;
