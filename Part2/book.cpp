@@ -11,67 +11,96 @@ using namespace std;
 
 class ReadingManager {
 public:
-    ReadingManager() {
-        person.insert({ -1,-1 });
-        data.insert({ 0,{-1} });
-    }
-
     void Read(int user_id, int page_count) {
-        LOG_DURATION("read");
-
         if ((person.count(user_id)) == 0) {
-            data.insert({ page_count,{user_id} });
+            createPage(page_count);
             person.insert({ user_id,page_count });
         }
         else {
-            if (data.find(person.at(user_id))->second.size() == 1) {
-                data.erase(person.at(user_id));
-                data[page_count].insert(user_id);
-                person[user_id] = page_count;
-            }
-            else {
-                data.find(person.at(user_id))->second.erase(user_id);
-                data[page_count].insert(user_id);
-                person[user_id] = page_count;
-            }
+            delPage(person[user_id]);
+            person[user_id] = page_count;
+            createPage(page_count);
         }
-    }
-
-    double Cheer(int user_id) const {
-        const int user_count = GetUserCount();
-        if (user_count == 1) {
-            return 1;
-        }
-        int position;
-        if (data.size() == 1) {
-            position = 0;
+        if (score.count(person[user_id]) == 0) {
+            score.insert({ page_count,-1.0 });
         }
         else {
-            position = GetUserCount() + 1;
-            for (auto it = next(data.begin()); it->second.count(user_id) != 0; ++it) {
-                position -= it->second.size();
+
+        }
+        auto count = GetUserCount();
+        auto position = 0;
+        for (auto& it : score) {
+            position+= ;
+            if (position == count) {
+
+                it.second = (1.0 / page_counter[page_count]);
+
             }
+            else if (position != 1) {
+                it.second = ((count - position) * 1.0 / (count - 1));
+            }
+            else { it.second = 0.0; }
         }
-        if (position == user_count) {
-            return 0;
-        }
-        
-        auto it = data.upper_bound(person.at(user_id));
-        if (it == data.end() && prev(it)->second.size() == 1) {
-            return 1;
-        }
-        return (static_cast<double>(position - user_count) / static_cast<double>(user_count - 1));
     }
 
+    /*
+  double Cheer(int user_id) const {
+    if (user_page_counts_[user_id] == 0) {
+      return 0;
+    }
+    const int user_count = GetUserCount();
+    if (user_count == 1) {
+      return 1;
+    }
+    const int page_count = user_page_counts_[user_id];
+    int position = user_positions_[user_id];
+    while (position < user_count &&
+      user_page_counts_[sorted_users_[position]] == page_count) {
+      ++position;
+    }
+    if (position == user_count) {
+        return 0;
+    }
+    return (user_count - position) * 1.0 / (user_count - 1);
+  }*/
+    double Cheer(int user_id) const {
+        if (GetUserCount() == 1) {
+            return 1;
+        }
+        else if (score.size() == 0) {
+            return 0;
+        }
+        else {
+            return score.find(person.find(user_id)->second)->second;
+        }
+    }
+    void createPage(int page_count) {
+        if (page_counter.count(page_count) == 0) {
+            page_counter.insert({ page_count , 1 });
+        }
+        else {
+            page_counter.find(page_count)->second++;
+        }
+    }
+    void delPage(int page_count) {
+        if (page_counter.find(page_count)->second == 1) {
+            page_counter.erase(page_counter.find(page_count));
+            score.erase(score.find(page_count));
+        }
+        else {
+            page_counter.find(page_count)->second--;
+        }
+    }
 private:
     static const int MAX_USER_COUNT_ = 100'000;
 
     // map<vector<int>,int> data2; // первое страницы, второе индекс людей на ней
-    map<int, set<int>> data; // первое страницы, второе индекс людей на ней
-    map<int, int> person; // первое страницы, второе индекс людей на ней
+    map<int, double> score;  // страница и счет страницы 
+    map<int, int> person; // человек и на какой он странице
+    map<int, int> page_counter; // страница и кол-во людей на ней (для добавления)
 
     int GetUserCount() const {
-        return person.size() - 1;
+        return person.size();
     }
 };
 
