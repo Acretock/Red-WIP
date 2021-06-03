@@ -6,7 +6,7 @@
 #include <set>
 #include <algorithm>
 #include "profile.h"
-
+#include <cmath>
 using namespace std;
 
 class ReadingManager {
@@ -28,18 +28,24 @@ public:
 
         }
         auto count = GetUserCount();
-        auto position = 0;
+        //cout << count << " GetUserCount()" << endl;
+        auto position = GetUserCount() + 1;
+        // cout << position << " GetUserPos()" << endl;
         for (auto& it : score) {
-            position+= ;
-            if (position == count) {
-
-                it.second = (1.0 / page_counter[page_count]);
-
+            position -= page_counter[it.first];
+            //cout << position << " GetUserPos() step" << endl;
+            if (position == 1) {
+                it.second = abs(1.0 / (page_counter[it.first]));
             }
-            else if (position != 1) {
-                it.second = ((count - position) * 1.0 / (count - 1));
+            else if (position != (count - page_counter[it.first] + 1)) {
+                it.second = (abs(position - count) * 1.0 / (count - 1));
             }
-            else { it.second = 0.0; }
+            else {
+                if (page_counter[it.first] != 1) {
+                    it.second = abs(1.0 / (count));
+                }
+                else { it.second = 0.0; }
+            }
         }
     }
 
@@ -74,6 +80,18 @@ public:
             return score.find(person.find(user_id)->second)->second;
         }
     }
+
+private:
+    static const int MAX_USER_COUNT_ = 100'000;
+
+    // map<vector<int>,int> data2; // первое страницы, второе индекс людей на ней
+    map<int, double> score;  // страница и счет страницы 
+    map<int, int> person; // человек и на какой он странице
+    map<int, int> page_counter; // страница и кол-во людей на ней (для добавления)
+
+    int GetUserCount() const {
+        return person.size();
+    }
     void createPage(int page_count) {
         if (page_counter.count(page_count) == 0) {
             page_counter.insert({ page_count , 1 });
@@ -91,16 +109,12 @@ public:
             page_counter.find(page_count)->second--;
         }
     }
-private:
-    static const int MAX_USER_COUNT_ = 100'000;
-
-    // map<vector<int>,int> data2; // первое страницы, второе индекс людей на ней
-    map<int, double> score;  // страница и счет страницы 
-    map<int, int> person; // человек и на какой он странице
-    map<int, int> page_counter; // страница и кол-во людей на ней (для добавления)
-
-    int GetUserCount() const {
-        return person.size();
+    int GetUserPos(int page_count) {
+        int res = 0;
+        for (auto it = page_counter.begin(); it != next(page_counter.find(page_count)); it++) {
+            res += it->second;
+        }
+        return res - 1;
     }
 };
 
@@ -111,7 +125,6 @@ int main() {
     // а также выполняется отвязка cin от cout
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
-
     ReadingManager manager;
 
     int query_count;

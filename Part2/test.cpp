@@ -1,27 +1,4 @@
-#include <iomanip>
-#include <iostream>
-#include <vector>
-#include <utility>
-#include <map>
-#include <set>
-#include <algorithm>
-#include "profile.h"
-#include <cmath>
-using namespace std;
-
-/*
-EMPTY
-
-ONE PERSON
-
-TWO PERSONS DIFF
-TWO PERSONS SAME
-
-THREE PERSONS ALL SAME
-THREE PERSONS ALL DIFF
-THREE PERSONS 2 SAME 1 DIFF
-
-*/
+#include "test_runner.h"
 
 class ReadingManager {
 public:
@@ -42,25 +19,18 @@ public:
 
         }
         auto count = GetUserCount();
-        //cout << count << " GetUserCount()" << endl;
-        auto position = GetUserCount() + 1;
-        // cout << position << " GetUserPos()" << endl;
+        auto position = 0;
         for (auto& it : score) {
-            position -= page_counter[it.first];
-            //cout << position << " GetUserPos() step" << endl;
-            if (position == (count - page_counter[it.first] + 1)) {
-                if (page_counter[it.first] != 1) {
-                    it.second = abs(1.0 / (count));
-                }
-                else { it.second = 0.0; }
-            }
-            else if (position == 1) {
-                it.second = abs(page_counter[it.first] / (count - page_counter[it.first]));
-            }
-            else {
-                it.second = (abs(position - count) * 1.0 / (count - 1));
-            }
+            position++;
+            if (position == count) {
 
+                it.second = (1.0 / page_counter[page_count]);
+
+            }
+            else if (position != 1) {
+                it.second = ((count - position) * 1.0 / (count - 1));
+            }
+            else { it.second = 0.0; }
         }
     }
 
@@ -95,7 +65,7 @@ public:
             return score.find(person.find(user_id)->second)->second;
         }
     }
-
+    
 private:
     static const int MAX_USER_COUNT_ = 100'000;
 
@@ -124,42 +94,68 @@ private:
             page_counter.find(page_count)->second--;
         }
     }
-    int GetUserPos(int page_count) {
-        int res = 0;
-        for (auto it = page_counter.begin(); it != next(page_counter.find(page_count)); it++) {
-            res += it->second;
+    void updatePages() {}
+};
+
+using namespace std;
+
+class ReadingManagerOld {
+public:
+    ReadingManagerOld()
+        : user_page_counts_(MAX_USER_COUNT_ + 1, 0),
+        sorted_users_(),
+        user_positions_(MAX_USER_COUNT_ + 1, -1) {}
+
+    void Read(int user_id, int page_count) {
+        if (user_page_counts_[user_id] == 0) {
+            AddUser(user_id);
         }
-        return res - 1;
+        user_page_counts_[user_id] = page_count;
+        int& position = user_positions_[user_id];
+        while (position > 0 && page_count > user_page_counts_[sorted_users_[position - 1]]) {
+            SwapUsers(position, position - 1);
+        }
+    }
+
+    double addCheer(int user_id) const {
+        if (user_page_counts_[user_id] == 0) {
+            return 0;
+        }
+        const int user_count = GetUserCount();
+        if (user_count == 1) {
+            return 1;
+        }
+        const int page_count = user_page_counts_[user_id];
+        int position = user_positions_[user_id];
+        while (position < user_count &&
+            user_page_counts_[sorted_users_[position]] == page_count) {
+            ++position;
+        }
+        if (position == user_count) {
+            return 0;
+        }
+        return (user_count - position) * 1.0 / (user_count - 1);
+    }
+
+private:
+    static const int MAX_USER_COUNT_ = 100'000;
+
+    vector<int> user_page_counts_;
+    vector<int> sorted_users_;   // РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅС‹ РїРѕ СѓР±С‹РІР°РЅРёСЋ РєРѕР»РёС‡РµСЃС‚РІР° СЃС‚СЂР°РЅРёС†
+    vector<int> user_positions_; // РїРѕР·РёС†РёРё РІ РІРµРєС‚РѕСЂРµ sorted_users_
+
+    int GetUserCount() const {
+        return sorted_users_.size();
+    }
+    void AddUser(int user_id) {
+        sorted_users_.push_back(user_id);
+        user_positions_[user_id] = sorted_users_.size() - 1;
+    }
+    void SwapUsers(int lhs_position, int rhs_position) {
+        const int lhs_id = sorted_users_[lhs_position];
+        const int rhs_id = sorted_users_[rhs_position];
+        swap(sorted_users_[lhs_position], sorted_users_[rhs_position]);
+        swap(user_positions_[lhs_id], user_positions_[rhs_id]);
     }
 };
 
-
-int main() {
-    // Для ускорения чтения данных отключается синхронизация
-    // cin и cout с stdio,
-    // а также выполняется отвязка cin от cout
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
-    ReadingManager manager;
-
-    int query_count;
-    cin >> query_count;
-
-    for (int query_id = 0; query_id < query_count; ++query_id) {
-        string query_type;
-        cin >> query_type;
-        int user_id;
-        cin >> user_id;
-
-        if (query_type == "READ") {
-            int page_count;
-            cin >> page_count;
-            manager.Read(user_id, page_count);
-        }
-        else if (query_type == "CHEER") {
-            cout << setprecision(6) << manager.Cheer(user_id) << "\n";
-        }
-    }
-
-    return 0;
-}
