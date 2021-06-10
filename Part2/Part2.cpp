@@ -1,165 +1,59 @@
-#include <iomanip>
-#include <iostream>
-#include <vector>
-#include <utility>
-#include <map>
-#include <set>
+#include "test_runner.h"
+
 #include <algorithm>
-#include "profile.h"
-#include <cmath>
+#include <iostream>
+#include <string>
+#include <queue>
+#include <stdexcept>
+#include <set>
 using namespace std;
 
-/*
-EMPTY
-
-ONE PERSON
-
-TWO PERSONS DIFF
-TWO PERSONS SAME
-
-THREE PERSONS ALL SAME
-THREE PERSONS ALL DIFF
-THREE PERSONS 2 SAME 1 DIFF
-
-*/
-
-class ReadingManager {
+template <class T>
+class ObjectPool {
 public:
-    void Read(int user_id, int page_count) {
-        if ((person.count(user_id)) == 0) {
-            createPage(page_count);
-            person.insert({ user_id,page_count });
-        }
-        else {
-            delPage(person[user_id]);
-            person[user_id] = page_count;
-            createPage(page_count);
-        }
-        if (score.count(person[user_id]) == 0) {
-            score.insert({ page_count,-1.0 });
-        }
-        else {
+	T* Allocate() {
+		if (free.empty()) {
+		}
+		else {
+			;
+		}
+	}
 
-        }
-        auto count = GetUserCount();
-        //cout << count << " GetUserCount()" << endl;
-        auto position = GetUserCount() + 1;
-        // cout << position << " GetUserPos()" << endl;
-        for (auto& it : score) {
-            position -= page_counter[it.first];
-            //cout << position << " GetUserPos() step" << endl;
-            if (position == (count - page_counter[it.first] + 1)) {
-                if (page_counter[it.first] != 1) {
-                    it.second = abs(1.0 / (count));
-                }
-                else { it.second = 0.0; }
-            }
-            else if (position == 1) {
-                it.second = abs(page_counter[it.first] / (count - page_counter[it.first]));
-            }
-            else {
-                it.second = (abs(position - count) * 1.0 / (count - 1));
-            }
+	T* TryAllocate();
 
-        }
-    }
+	void Deallocate(T* object);
 
-    /*
-  double Cheer(int user_id) const {
-    if (user_page_counts_[user_id] == 0) {
-      return 0;
-    }
-    const int user_count = GetUserCount();
-    if (user_count == 1) {
-      return 1;
-    }
-    const int page_count = user_page_counts_[user_id];
-    int position = user_positions_[user_id];
-    while (position < user_count &&
-      user_page_counts_[sorted_users_[position]] == page_count) {
-      ++position;
-    }
-    if (position == user_count) {
-        return 0;
-    }
-    return (user_count - position) * 1.0 / (user_count - 1);
-  }*/
-    double Cheer(int user_id) const {
-        if (GetUserCount() == 1) {
-            return 1;
-        }
-        else if (score.size() == 0) {
-            return 0;
-        }
-        else {
-            return score.find(person.find(user_id)->second)->second;
-        }
-    }
+	~ObjectPool();
 
 private:
-    static const int MAX_USER_COUNT_ = 100'000;
-
-    // map<vector<int>,int> data2; // первое страницы, второе индекс людей на ней
-    map<int, double> score;  // страница и счет страницы 
-    map<int, int> person; // человек и на какой он странице
-    map<int, int> page_counter; // страница и кол-во людей на ней (для добавления)
-
-    int GetUserCount() const {
-        return person.size();
-    }
-    void createPage(int page_count) {
-        if (page_counter.count(page_count) == 0) {
-            page_counter.insert({ page_count , 1 });
-        }
-        else {
-            page_counter.find(page_count)->second++;
-        }
-    }
-    void delPage(int page_count) {
-        if (page_counter.find(page_count)->second == 1) {
-            page_counter.erase(page_counter.find(page_count));
-            score.erase(score.find(page_count));
-        }
-        else {
-            page_counter.find(page_count)->second--;
-        }
-    }
-    int GetUserPos(int page_count) {
-        int res = 0;
-        for (auto it = page_counter.begin(); it != next(page_counter.find(page_count)); it++) {
-            res += it->second;
-        }
-        return res - 1;
-    }
+	queue<T> all;
+	set<T> free;
 };
 
+void TestObjectPool() {
+	ObjectPool<string> pool;
+
+	auto p1 = pool.Allocate();
+	auto p2 = pool.Allocate();
+	auto p3 = pool.Allocate();
+
+	*p1 = "first";
+	*p2 = "second";
+	*p3 = "third";
+
+	pool.Deallocate(p2);
+	ASSERT_EQUAL(*pool.Allocate(), "second");
+
+	pool.Deallocate(p3);
+	pool.Deallocate(p1);
+	ASSERT_EQUAL(*pool.Allocate(), "third");
+	ASSERT_EQUAL(*pool.Allocate(), "first");
+
+	pool.Deallocate(p1);
+}
 
 int main() {
-    // Для ускорения чтения данных отключается синхронизация
-    // cin и cout с stdio,
-    // а также выполняется отвязка cin от cout
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
-    ReadingManager manager;
-
-    int query_count;
-    cin >> query_count;
-
-    for (int query_id = 0; query_id < query_count; ++query_id) {
-        string query_type;
-        cin >> query_type;
-        int user_id;
-        cin >> user_id;
-
-        if (query_type == "READ") {
-            int page_count;
-            cin >> page_count;
-            manager.Read(user_id, page_count);
-        }
-        else if (query_type == "CHEER") {
-            cout << setprecision(6) << manager.Cheer(user_id) << "\n";
-        }
-    }
-
-    return 0;
+	TestRunner tr;
+	RUN_TEST(tr, TestObjectPool);
+	return 0;
 }

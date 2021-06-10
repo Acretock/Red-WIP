@@ -9,6 +9,20 @@
 #include <cmath>
 using namespace std;
 
+/*
+EMPTY
+
+ONE PERSON
+
+TWO PERSONS DIFF
+TWO PERSONS SAME
+
+THREE PERSONS ALL SAME
+THREE PERSONS ALL DIFF
+THREE PERSONS 2 SAME 1 DIFF
+
+*/
+
 class ReadingManager {
 public:
     void Read(int user_id, int page_count) {
@@ -34,18 +48,31 @@ public:
         for (auto& it : score) {
             position -= page_counter[it.first];
             //cout << position << " GetUserPos() step" << endl;
+
             if (position == 1) {
-                it.second = abs(1.0 / (page_counter[it.first]));
-            }
-            else if (position != (count - page_counter[it.first] + 1)) {
-                it.second = (abs(position - count) * 1.0 / (count - 1));
+                if (count == page_counter[it.first]) {
+                    it.second = abs(1.0 / (page_counter[it.first]));
+                }
+                else if (page_counter[it.first] == 1) {
+                    it.second = 1.0;
+                }
+                else {
+                    it.second = 1.0 - ((1.0 / (page_counter[it.first])) / page_counter[it.first]);
+                }
             }
             else {
-                if (page_counter[it.first] != 1) {
-                    it.second = abs(1.0 / (count));
-                }
-                else { it.second = 0.0; }
+                it.second = (abs(position - count) * 1.0 / (count - 1));
             }
+            if (position == (count - page_counter[it.first] + 1) && page_counter[it.first] != 1) {
+                it.second = abs(1.0 / (count));
+            }
+            else if (position == (count - page_counter[it.first] + 1) && position != 1) {
+                it.second = 0.0;
+            }
+
+            if () {
+            }
+
         }
     }
 
@@ -120,11 +147,9 @@ private:
 
 
 int main() {
-    // Для ускорения чтения данных отключается синхронизация
-    // cin и cout с stdio,
-    // а также выполняется отвязка cin от cout
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
+    ReadingManager manager;
     ReadingManager manager;
 
     int query_count;
