@@ -13,21 +13,26 @@ class ObjectPool {
 public:
 	T* Allocate() {
 		if (free.empty()) {
+			auto tmp = 
+			all.push();
+			return all.back();
 		}
 		else {
 			;
 		}
 	}
 
-	T* TryAllocate();
+	T* TryAllocate() {}
 
-	void Deallocate(T* object);
+	void Deallocate(T* object) {}
 
-	~ObjectPool();
+	~ObjectPool() {}
 
 private:
-	queue<T> all;
-	set<T> free;
+	queue<T*> all;
+	T* allP = new T[100];
+	set<T*> free;
+	T* freeP;
 };
 
 void TestObjectPool() {
