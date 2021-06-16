@@ -1,64 +1,82 @@
-#include "test_runner.h"
-
-#include <algorithm>
+#include <map>
+#include <set>
 #include <iostream>
 #include <string>
-#include <queue>
-#include <stdexcept>
-#include <set>
+#include <limits>
+#include <cmath>
+#include <deque>
+
 using namespace std;
 
-template <class T>
-class ObjectPool {
+class Booking
+{
 public:
-	T* Allocate() {
-		if (free.empty()) {
-			auto tmp = 
-			all.push();
-			return all.back();
-		}
-		else {
-			;
-		}
-	}
+    void book(int64_t time, string hotel_name, uint32_t client_id, uint16_t room_count) {
+        if (last_booked.count(hotel_name) == 0) {
+            last_booked.insert({ hotel_name,time });
 
-	T* TryAllocate() {}
+        }
+        else {
 
-	void Deallocate(T* object) {}
+        }
+    }
 
-	~ObjectPool() {}
+    int clients(string hotel_name) {
+        if (res_clients.count(hotel_name) == 0) {
+            return 0;
+        }
+        else {
+            return res_clients.at(hotel_name);
+        }
+    }
+
+    int rooms(string hotel_name) {
+        if (res_rooms.count(hotel_name) == 0) {
+            return 0;
+        }
+        else {
+            return res_rooms.at(hotel_name);
+        }
+    }
 
 private:
-	queue<T*> all;
-	T* allP = new T[100];
-	set<T*> free;
-	T* freeP;
+    map<string, int64_t> last_booked;
+    map<string, deque<uint32_t>> clients;
+    map<string, deque<uint16_t>> clients;
+    map<string, int> res_clients;
+    map<string, int> res_rooms;
 };
 
-void TestObjectPool() {
-	ObjectPool<string> pool;
-
-	auto p1 = pool.Allocate();
-	auto p2 = pool.Allocate();
-	auto p3 = pool.Allocate();
-
-	*p1 = "first";
-	*p2 = "second";
-	*p3 = "third";
-
-	pool.Deallocate(p2);
-	ASSERT_EQUAL(*pool.Allocate(), "second");
-
-	pool.Deallocate(p3);
-	pool.Deallocate(p1);
-	ASSERT_EQUAL(*pool.Allocate(), "third");
-	ASSERT_EQUAL(*pool.Allocate(), "first");
-
-	pool.Deallocate(p1);
-}
 
 int main() {
-	TestRunner tr;
-	RUN_TEST(tr, TestObjectPool);
-	return 0;
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+    Booking manager;
+    cout << numeric_limits<uint8_t>::max() / pow(10, 3);
+    int query_count;
+    cin >> query_count;
+
+    for (int query_id = 0; query_id < query_count; ++query_id) {
+        string query_type;
+        cin >> query_type;
+
+        if (query_type == "BOOK") {
+            int64_t time;
+            string hotel_name; 
+            uint32_t client_id;
+            uint16_t room_count;
+            cin >> time >> hotel_name >> client_id >> room_count;
+            manager.book(time, hotel_name, client_id, room_count);
+        } else if (query_type == "CLIENTS ") {
+            string hotel_name;
+            cin >> hotel_name;
+            cout << manager.clients(hotel_name) << "\n";
+        } else if ("ROOMS ") {
+            string hotel_name;
+            cin >> hotel_name;
+            cout << manager.rooms(hotel_name) << "\n";
+        }
+    }
+
+    return 0;
 }
