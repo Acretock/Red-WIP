@@ -8,25 +8,16 @@ class ObjectPool {
 public:
 	T* Allocate(const T& newData) {
 		if (isDeallocated) {
-			(allocated + size) = deallocated;
-			allocatedEnd = allocated + sizeAlloc;
-			sizeAlloc++;
-			return allocatedEnd;
+			addDeallocated();
 		}
 		else {
-			(allocated + sizeAlloc) = &newData;
-			allocatedEnd = allocated + sizeAlloc;
-			sizeAlloc++;
-			return allocatedEnd;
+			addNewData();
 		}
 	}
 
 	T* TryAllocate() {
 		if (isDeallocated) {
-			allocated + size = deallocated;
-			allocatedEnd = allocated + sizeAlloc;
-			sizeAlloc++;
-			return allocatedEnd;
+			addDeallocated();
 		}
 		else {
 			return nullptr;
@@ -53,6 +44,18 @@ private:
 	T* deallocatedEnd;
 	size_t sizeDealloc = 0;
 	bool isDeallocated = false;
+	void addDeallocated() {
+		(allocated + size) = deallocated;
+		allocatedEnd = allocated + sizeAlloc;
+		sizeAlloc++;
+		return allocatedEnd;
+	}
+	void addNewData() {
+		(allocated + sizeAlloc) = &newData;
+		allocatedEnd = allocated + sizeAlloc;
+		sizeAlloc++;
+		return allocatedEnd;
+	}
 };
 
 int main() {
