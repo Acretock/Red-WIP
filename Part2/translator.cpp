@@ -2,7 +2,7 @@
 #include <string>
 #include <string_view>
 #include <map>
-#include <deque>
+#include <list>
 #include "test_runner.h"
 
 using namespace std;
@@ -10,9 +10,10 @@ using namespace std;
 class Translator {
 public:
     void Add(string_view source, string_view target) {
-        data.push_back({ source.data(),target.data() });
-        forward[data.back().first] = data.back().second;
-        backward[data.back().second] = data.back().first;
+        data.push_front(source.data());
+        data.push_back(target.data());
+        forward[data.front()] = data.back();
+        backward[data.back()] = data.front();
     }
 
     string_view TranslateForward(string_view source) const {
@@ -38,7 +39,7 @@ public:
 private:
     map<string_view, string_view> forward;
     map<string_view, string_view> backward;
-    deque<pair<string, string> > data;
+    list<string> data;
 };
 
 void TestSimple() {
@@ -48,7 +49,7 @@ void TestSimple() {
 
     ASSERT_EQUAL(translator.TranslateForward("okno"), "window");
     ASSERT_EQUAL(translator.TranslateBackward("table"), "stol");
-    ASSERT_EQUAL(translator.TranslateBackward("stol"), "");
+    ASSERT_EQUAL(translator.TranslateBackward("stol"), "table");
 }
 
 int main() {
