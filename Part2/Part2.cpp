@@ -1,162 +1,172 @@
+#include <string>
+#include <list>
+#include <string_view>
+#include <iterator>
 #include "test_runner.h"
-#include "profile.h"
-#include <random>
-#include <stdexcept>
-#include <iostream>
-#include <array>
-#include <exception>
 using namespace std;
 
-template <typename T, size_t N>
-class StackVector {
+class Editor {
 public:
-    
-    explicit StackVector(size_t a_size = 0) {
-        cap = N;
-        if (a_size > cap) {
-            throw invalid_argument{""};
-        }
-        size = a_size;
-    }
-    T& operator[](size_t index) { return data[index]; }
-    const T& operator[](size_t index) const { return data[index]; }
-    decltype(auto) begin() { return data.begin(); }
-    decltype(auto) end() { return (data.begin() + size); }
-    decltype(auto) begin() const { return data.begin(); }
-    decltype(auto) end() const { return (data.begin() + size); }
-    size_t Size() const { return size; }
-    size_t Capacity() const { return cap; }
-    void PushBack(const T& value) {
-        if ((size + 1) > cap) {
-            throw overflow_error{""};
-        } else {
-            data[size] = value;
-            size++;
+    Editor() : cursor_iter(data.begin()) {}
+    // сдвинуть курсор влево
+    void Left() {
+        if (cursor_iter != data.begin()) {
+            cursor_iter--;
         }
     }
-    T PopBack() {
-        if (size == 0) {
-            throw underflow_error{""};
-        } else {
-            T res = data[size - 1];
-            data[size - 1] = T{};
-            size--;
-            return res;
+    // сдвинуть курсор вправо
+    void Right() {
+        if (cursor_iter != data.end()) {
+            cursor_iter++;
         }
     }
-
+    // вставить символ token
+    void Insert(char token) {
+        data.insert(cursor_iter, token); 
+        if (cursor_iter != data.end()) {
+            cursor_iter++;
+        }
+    }
+    // cкопировать
+    // не более tokens символов,
+    // начиная с текущей позиции курсора
+    void Copy(size_t tokens) {
+        auto it = cursor_iter;
+        for (size_t i = 0; i < tokens; i++) {
+            buffer += *it;
+            ++it;
+        }
+    }
+    // вырезать не более tokens символов,
+    // начиная с текущей позиции курсора
+    void Cut(size_t tokens) {
+        auto it = cursor_iter;
+        for (size_t i = 0; i < tokens; i++) {
+            buffer += *it;
+            ++it;
+        }
+        data.erase(cursor_iter, it);
+    }
+    // вставить содержимое буфера
+    // в текущую позицию курсора
+    void Paste() {
+        for (char c : buffer) {
+            Insert(c);
+        }
+    }
+    // получить текущее содержимое
+    // текстового редактора
+    string GetText() const {
+        return {data.begin(),data.end()};
+    }
 private:
-    array<T, N> data;
-    size_t size;
-    size_t cap;
+    list <char> data;
+    string buffer;
+    list<char>::iterator cursor_iter;
 };
 
-void TestConstruction() {
-    StackVector<int, 10> v;
-    ASSERT_EQUAL(v.Size(), 0u);
-    ASSERT_EQUAL(v.Capacity(), 10u);
-
-    StackVector<int, 8> u(5);
-    ASSERT_EQUAL(u.Size(), 5u);
-    ASSERT_EQUAL(u.Capacity(), 8u);
-
-    try {
-        StackVector<int, 10> u(50);
-        Assert(false, "Expect invalid_argument for too large size");
-    }
-    catch (invalid_argument&) {
-    }
-    catch (...) {
-        Assert(false, "Unexpected exception for too large size");
+void TypeText(Editor& editor, const string& text) {
+    for (char c : text) {
+        editor.Insert(c);
     }
 }
 
-void TestPushBack() {
-    StackVector<int, 5> v;
-    for (size_t i = 0; i < v.Capacity(); ++i) {
-        v.PushBack(i);
-    }
+void TestEditing() {
+    {
+        Editor editor;
 
-    try {
-        v.PushBack(0);
-        Assert(false, "Expect overflow_error for PushBack in full vector");
+        const size_t text_len = 12;
+        const size_t first_part_len = 7;
+        TypeText(editor, "hello, world");
+        ASSERT_EQUAL(editor.GetText(), "hello, world");
+        for (size_t i = 0; i < text_len; ++i) {
+            editor.Left();
+        }
+
+        // world
+        editor.Cut(first_part_len);
+        ASSERT_EQUAL(editor.GetText(), "world");
+        for (size_t i = 0; i < text_len - first_part_len; ++i) {
+            editor.Right();
+        }
+        TypeText(editor, ", ");
+        ASSERT_EQUAL(editor.GetText(), "world, ");
+        // world,
+        editor.Paste();
+        // world, hello,_
+        ASSERT_EQUAL(editor.GetText(), "world, hello, ");
+
+        editor.Left();
+        editor.Left();
+
+        editor.Cut(3);
+
+        ASSERT_EQUAL(editor.GetText(), "world, hello");
     }
-    catch (overflow_error&) {
-    }
-    catch (...) {
-        Assert(false, "Unexpected exception for PushBack in full vector");
+    {
+        Editor editor;
+
+        TypeText(editor, "misprnit");
+        editor.Left();
+        editor.Left();
+        editor.Left();
+        editor.Cut(1);
+        editor.Right();
+        editor.Paste();
+
+        ASSERT_EQUAL(editor.GetText(), "misprint");
     }
 }
 
- void TestPopBack() {
-    StackVector<int, 5> v;
-    for (size_t i = 1; i <= v.Capacity(); ++i) {
-        v.PushBack(i);
-    }
-    for (int i = v.Size(); i > 0; --i) {
-        ASSERT_EQUAL(v.PopBack(), i);
+void TestReverse() {
+    Editor editor;
+
+    const string text = "esreveR";
+    for (char c : text) {
+        editor.Insert(c);
+        editor.Left();
     }
 
-    try {
-        v.PopBack();
-        Assert(false, "Expect underflow_error for PopBack from empty vector");
-    }
-    catch (underflow_error&) {
-    }
-    catch (...) {
-        Assert(false, "Unexpected exception for PopBack from empty vector");
-    }
+    ASSERT_EQUAL(editor.GetText(), "Reverse");
 }
 
+void TestNoText() {
+    Editor editor;
+    ASSERT_EQUAL(editor.GetText(), "");
+
+    editor.Left();
+    editor.Left();
+    editor.Right();
+    editor.Right();
+    editor.Copy(0);
+    editor.Cut(0);
+    editor.Paste();
+
+    ASSERT_EQUAL(editor.GetText(), "");
+}
+void TestEmptyBuffer() {
+    Editor editor;
+
+    editor.Paste();
+    TypeText(editor, "example");
+    editor.Left();
+    editor.Left();
+    editor.Paste();
+    editor.Right();
+    editor.Paste();
+    editor.Copy(0);
+    editor.Paste();
+    editor.Left();
+    editor.Cut(0);
+    editor.Paste();
+
+    ASSERT_EQUAL(editor.GetText(), "example");
+}
 int main() {
-    {
-        TestRunner tr;
-        RUN_TEST(tr, TestConstruction);
-        RUN_TEST(tr, TestPushBack);
-        RUN_TEST(tr, TestPopBack);
-    }
-
-    cerr << "Running benchmark..." << endl;
-    const size_t max_size = 2500;
-
-    default_random_engine re;
-    uniform_int_distribution<int> value_gen(1, max_size);
-
-    vector<vector<int>> test_data(50000);
-    for (auto& cur_vec : test_data) {
-        cur_vec.resize(value_gen(re));
-        for (int& x : cur_vec) {
-            x = value_gen(re);
-        }
-    }
-
-    {
-        LOG_DURATION("vector w/o reserve");
-        for (auto& cur_vec : test_data) {
-            vector<int> v;
-            for (int x : cur_vec) {
-                v.push_back(x);
-            }
-        }
-    }
-    {
-        LOG_DURATION("vector with reserve");
-        for (auto& cur_vec : test_data) {
-            vector<int> v;
-            v.reserve(cur_vec.size());
-            for (int x : cur_vec) {
-                v.push_back(x);
-            }
-        }
-    }
-    {
-        LOG_DURATION("StackVector");
-        for (auto& cur_vec : test_data) {
-            StackVector<int, max_size> v;
-            for (int x : cur_vec) {
-                v.PushBack(x);
-            }
-        }
-    }
-    cerr << "Done" << endl;
+    TestRunner tr;
+    RUN_TEST(tr, TestEditing);
+    RUN_TEST(tr, TestReverse);
+    RUN_TEST(tr, TestNoText);
+    RUN_TEST(tr, TestEmptyBuffer);
+    return 0;
 }
