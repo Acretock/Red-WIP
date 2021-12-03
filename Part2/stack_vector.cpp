@@ -3,23 +3,52 @@
 #include <random>
 #include <stdexcept>
 #include <iostream>
-
+#include <array>
+#include <exception>
 using namespace std;
 
 template <typename T, size_t N>
 class StackVector {
 public:
-	explicit StackVector(size_t a_size = 0);
-	T& operator[](size_t index);
-	const T& operator[](size_t index) const;
-	? ? ? begin();
-	? ? ? end();
-	? ? ? begin() const;
-	? ? ? end() const;
-	size_t Size() const;
-	size_t Capacity() const;
-	void PushBack(const T& value);
-	T PopBack();
+    
+    explicit StackVector(size_t a_size = 0) {
+        cap = N;
+        if (a_size > cap) {
+            throw invalid_argument{""};
+        }
+        size = a_size;
+    }
+    T& operator[](size_t index) { return data[index]; }
+    const T& operator[](size_t index) const { return data[index]; }
+    decltype(auto) begin() { return data.begin(); }
+    decltype(auto) end() { return (data.begin() + size); }
+    decltype(auto) begin() const { return data.begin(); }
+    decltype(auto) end() const { return (data.begin() + size); }
+    size_t Size() const { return size; }
+    size_t Capacity() const { return cap; }
+    void PushBack(const T& value) {
+        if ((size + 1) > cap) {
+            throw overflow_error{""};
+        } else {
+            data[size] = value;
+            size++;
+        }
+    }
+    T PopBack() {
+        if (size == 0) {
+            throw underflow_error{""};
+        } else {
+            T res = data[size - 1];
+            data[size - 1] = T{};
+            size--;
+            return res;
+        }
+    }
+
+private:
+    array<T, N> data;
+    size_t size;
+    size_t cap;
 };
 
 void TestConstruction() {
@@ -59,7 +88,7 @@ void TestPushBack() {
     }
 }
 
-void TestPopBack() {
+ void TestPopBack() {
     StackVector<int, 5> v;
     for (size_t i = 1; i <= v.Capacity(); ++i) {
         v.PushBack(i);
