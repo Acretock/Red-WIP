@@ -38,8 +38,8 @@ vector<Group<String>> GroupHeavyStrings(vector<String> strings) {
 
 template <typename String>
 vector<Group<String>> GroupHeavyStrings1(vector<String> strings) {
-    // Напишите реализацию функции,
-    // использовав не более 1 копирования каждого символа
+    // РќР°РїРёС€РёС‚Рµ СЂРµР°Р»РёР·Р°С†РёСЋ С„СѓРЅРєС†РёРё,
+    // РёСЃРїРѕР»СЊР·РѕРІР°РІ РЅРµ Р±РѕР»РµРµ 1 РєРѕРїРёСЂРѕРІР°РЅРёСЏ РєР°Р¶РґРѕРіРѕ СЃРёРјРІРѕР»Р°
     map <set<Char<String>>, Group<String>> total;
     for (auto& word : strings) {
         set<Char<String>> _word;
@@ -58,7 +58,7 @@ void TestGroupingABC() {
     vector<string> strings = { "caab", "abc", "cccc", "bacc", "c" };
     auto groups = GroupHeavyStrings(strings);
     ASSERT_EQUAL(groups.size(), 2);
-    sort(begin(groups), end(groups));  // Порядок групп не имеет значения
+    sort(begin(groups), end(groups));  // РџРѕСЂСЏРґРѕРє РіСЂСѓРїРї РЅРµ РёРјРµРµС‚ Р·РЅР°С‡РµРЅРёСЏ
     ASSERT_EQUAL(groups[0], vector<string>({ "caab", "abc", "bacc" }));
     ASSERT_EQUAL(groups[1], vector<string>({ "cccc", "c" }));
 }
@@ -67,7 +67,7 @@ void TestGroupingReal() {
     vector<string> strings = { "law", "port", "top", "laptop", "pot", "paloalto", "wall", "awl" };
     auto groups = GroupHeavyStrings(strings);
     ASSERT_EQUAL(groups.size(), 4);
-    sort(begin(groups), end(groups));  // Порядок групп не имеет значения
+    sort(begin(groups), end(groups));  // РџРѕСЂСЏРґРѕРє РіСЂСѓРїРї РЅРµ РёРјРµРµС‚ Р·РЅР°С‡РµРЅРёСЏ
     ASSERT_EQUAL(groups[0], vector<string>({ "laptop", "paloalto" }));
     ASSERT_EQUAL(groups[1], vector<string>({ "law", "wall", "awl" }));
     ASSERT_EQUAL(groups[2], vector<string>({ "port" }));
